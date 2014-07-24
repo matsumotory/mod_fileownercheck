@@ -1,0 +1,9 @@
+*.la
+*.lo
+*.o
+*.slo
+.libs
+GPATH
+GRTAGS
+GTAGS
+
