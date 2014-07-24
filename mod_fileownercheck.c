@@ -3,6 +3,7 @@
 // mod_fileownercheck.c - owner check for opened r->filename at output filter
 //
 // See Copyright Notice in LEGAL
+//
 */
 
 #include "httpd.h"
@@ -24,7 +25,7 @@
 
 module AP_MODULE_DECLARE_DATA fileownercheck_module;
 
-static int fileownercheck_check(request_rec *r, apr_file_t *fd)
+static int fileownercheck_from_file(request_rec *r, apr_file_t *fd)
 {
   apr_finfo_t finfo;
   struct stat st;
@@ -68,7 +69,7 @@ static apr_status_t fileownercheck_filter(ap_filter_t *f,
     return ap_pass_brigade(f->next, bb);
   }
 
-  status_code = fileownercheck_check(f->r, file->fd);
+  status_code = fileownercheck_from_file(f->r, file->fd);
   if (status_code != HTTP_OK) {
     apr_bucket *b;
 
