@@ -43,7 +43,7 @@ static int fileownercheck_from_opened_file(request_rec *r, apr_file_t *fd)
   }
 
   ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, ap_server_conf,
-      "%s: FILEOWNERCHECK: opened r->filename=%s uid=%d but "
+      "%s: FILEOWNERCHECK: opened r->filename=%s uid=%d, "
       "current r->filename uid=%d", MODULE_NAME, r->filename, finfo.user,
         st.st_uid);
 
@@ -73,14 +73,11 @@ static apr_status_t fileownercheck_filter(ap_filter_t *f,
   status_code = fileownercheck_from_opened_file(r, file->fd);
   if (status_code != HTTP_OK) {
     apr_bucket *eb;
-
     apr_brigade_cleanup(bb);
     eb = ap_bucket_error_create(status_code, NULL, r->pool, f->c->bucket_alloc);
     APR_BRIGADE_INSERT_TAIL(bb, b);
     eb = apr_bucket_eos_create(f->c->bucket_alloc);
     APR_BRIGADE_INSERT_TAIL(bb, eb);
-
-    return ap_pass_brigade(f->next, bb);
   }
 
   return ap_pass_brigade(f->next, bb);
