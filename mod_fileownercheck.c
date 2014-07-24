@@ -13,6 +13,12 @@
 #include "sys/types.h"
 #include "sys/stat.h"
 
+#if (AP_SERVER_MINORVERSION_NUMBER > 2)
+  #include "http_main.h"
+#else
+  #define ap_server_conf NULL
+#endif
+
 #define MODULE_NAME "mod_fileownercheck"
 #define MODULE_VERSION "0.0.1"
 
@@ -34,6 +40,11 @@ static int fileownercheck_check(request_rec *r, apr_file_t *fd)
         "%s: apr_file_info_get() failed: %s", MODULE_NAME, r->filename);
     return HTTP_FORBIDDEN;
   }
+
+  ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, ap_server_conf,
+      "%s: FILEOWNERCHECK: opened r->filename=%s uid=%d but "
+      "current r->filename uid=%d", MODULE_NAME, r->filename, finfo.user,
+        st.st_uid);
 
   if (st.st_uid != finfo.user) {
     ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r,
@@ -80,8 +91,11 @@ static void register_hooks(apr_pool_t *p)
       AP_FTYPE_RESOURCE);
 }
 
-module AP_MODULE_DECLARE_DATA fileownercheck_module =
-{
+#if (AP_SERVER_MINORVERSION_NUMBER > 2)
+AP_DECLARE_MODULE(fileownercheck) = {
+#else
+module AP_MODULE_DECLARE_DATA fileownercheck_module = {
+#endif
   STANDARD20_MODULE_STUFF,
   NULL, /* create per-directory config structure */
   NULL, /* merge per-directory config structures */
