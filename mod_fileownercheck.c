@@ -75,8 +75,7 @@ static apr_status_t fileownercheck_filter(ap_filter_t *f,
     apr_bucket *b;
 
     apr_brigade_cleanup(bb);
-    b = ap_bucket_error_create(status_code, NULL, r->pool,
-        f->c->bucket_alloc);
+    b = ap_bucket_error_create(status_code, NULL, r->pool, f->c->bucket_alloc);
     APR_BRIGADE_INSERT_TAIL(bb, b);
     b = apr_bucket_eos_create(f->c->bucket_alloc);
     APR_BRIGADE_INSERT_TAIL(bb, b);
