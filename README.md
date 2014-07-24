@@ -16,3 +16,7 @@ SetOutputFilter FILEOWNERCHECK
 ```
 AddOutputFilter FILEOWNERCHECK;INCLUDES .shtml
 ```
+## License
+under the MIT License:
+
+* http://www.opensource.org/licenses/mit-license.php
