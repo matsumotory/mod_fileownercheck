@@ -50,8 +50,9 @@ static int fileownercheck_from_opened_file(request_rec *r, apr_file_t *fd)
   if (st.st_uid != finfo.user) {
     ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r,
         "%s: FILEOWNERCHECK faild: opened r->filename=%s uid=%d but "
-        "current r->filename uid=%d", MODULE_NAME, r->filename, finfo.user,
-        st.st_uid);
+        "current r->filename uid=%d, "
+        "r->filename symlink to a unauthorized file?",
+        MODULE_NAME, r->filename, finfo.user, st.st_uid);
     return HTTP_FORBIDDEN;
   }
 
