@@ -10,13 +10,8 @@ ref. [Apache does not honor -FollowSymlinks due to TOCTOU](https://bugs.launchpa
 apxs -c -i mod_fileownercheck.c
 ```
 ### Config
-#### All request
 ```
-SetOutputFilter FILEOWNERCHECK
-```
-#### SSI
-```
-AddOutputFilter FILEOWNERCHECK;INCLUDES .shtml
+LoadModule fileownercheck_module modules/mod_fileownercheck.so
 ```
 ## License
 under the MIT License:
