@@ -10,6 +10,7 @@
 #include "http_config.h"
 #include "http_protocol.h"
 #include "http_log.h"
+#include "unixd.h"
 #include "util_filter.h"
 #include "sys/types.h"
 #include "sys/stat.h"
@@ -29,6 +30,7 @@ static int fileownercheck_from_opened_file(request_rec *r, apr_file_t *fd)
 {
   apr_finfo_t finfo;
   struct stat st;
+  ap_unix_identity_t *ugid = ap_run_get_suexec_identity(r);
 
   if (lstat(r->filename, &st) == -1) {
     ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, "%s: lstat() failed: %s",
@@ -53,6 +55,15 @@ static int fileownercheck_from_opened_file(request_rec *r, apr_file_t *fd)
         "current r->filename uid=%d, "
         "r->filename symlink to a unauthorized file?",
         MODULE_NAME, r->filename, finfo.user, st.st_uid);
+    return HTTP_FORBIDDEN;
+  }
+
+  if (ugid != NULL && ugid->uid != finfo.user) {
+    ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r,
+        "%s: FILEOWNERCHECK faild: opened r->filename=%s uid=%d but "
+        "suexec config uid=%d, "
+        "r->filename path includes symlink to a unauthorized dir?",
+        MODULE_NAME, r->filename, finfo.user, ugid->uid);
     return HTTP_FORBIDDEN;
   }
 
