@@ -9,6 +9,7 @@
 #include "httpd.h"
 #include "http_config.h"
 #include "http_protocol.h"
+#include "http_request.h"
 #include "http_log.h"
 #include "unixd.h"
 #include "util_filter.h"
@@ -102,10 +103,19 @@ static apr_status_t fileownercheck_filter(ap_filter_t *f,
   return ap_pass_brigade(f->next, bb);
 }
 
+static int fileownercheck_insert_output_filter(request_rec *r)
+{
+   ap_add_output_filter("FILEOWNERCHECK", NULL, r, r->connection);
+
+   return DECLINED;
+}
+
 static void register_hooks(apr_pool_t *p)
 {
   ap_register_output_filter("FILEOWNERCHECK", fileownercheck_filter, NULL,
       AP_FTYPE_RESOURCE);
+  ap_hook_fixups(fileownercheck_insert_output_filter, NULL, NULL,
+      APR_HOOK_LAST);
 }
 
 #if (AP_SERVER_MINORVERSION_NUMBER > 2)
