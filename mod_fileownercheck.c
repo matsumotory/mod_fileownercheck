@@ -58,6 +58,18 @@ static int fileownercheck_from_opened_file(request_rec *r, apr_file_t *fd)
   return HTTP_OK;
 }
 
+static void create_output_from_status_code(ap_filter_t *f,
+    apr_bucket_brigade *bb, int status)
+{
+  apr_bucket *eb;
+
+  apr_brigade_cleanup(bb);
+  eb = ap_bucket_error_create(status, NULL, f->r->pool, f->c->bucket_alloc);
+  APR_BRIGADE_INSERT_TAIL(bb, eb);
+  eb = apr_bucket_eos_create(f->c->bucket_alloc);
+  APR_BRIGADE_INSERT_TAIL(bb, eb);
+}
+
 static apr_status_t fileownercheck_filter(ap_filter_t *f,
     apr_bucket_brigade *bb)
 {
@@ -72,12 +84,7 @@ static apr_status_t fileownercheck_filter(ap_filter_t *f,
 
   status_code = fileownercheck_from_opened_file(r, file->fd);
   if (status_code != HTTP_OK) {
-    apr_bucket *eb;
-    apr_brigade_cleanup(bb);
-    eb = ap_bucket_error_create(status_code, NULL, r->pool, f->c->bucket_alloc);
-    APR_BRIGADE_INSERT_TAIL(bb, b);
-    eb = apr_bucket_eos_create(f->c->bucket_alloc);
-    APR_BRIGADE_INSERT_TAIL(bb, eb);
+    create_output_from_status_code(f, bb, status_code);
   }
 
   return ap_pass_brigade(f->next, bb);
