@@ -13,6 +13,10 @@ apxs -c -i mod_fileownercheck.c
 ```
 LoadModule fileownercheck_module modules/mod_fileownercheck.so
 ```
+#### suEXEC has installed
+
+mod_fileowner checks between owner of opened r->filename and user configured by ``SuexecUserGroup``.
+
 ## License
 under the MIT License:
 
