@@ -25,13 +25,31 @@
 #define MODULE_NAME "mod_fileownercheck"
 #define MODULE_VERSION "0.0.1"
 
+#define ENABLE 1
+#define DISABLE 0
+
 module AP_MODULE_DECLARE_DATA fileownercheck_module;
+
+typedef struct {
+  unsigned int check_suexec;
+} foc_dir_config_t;
+
+static void *foc_create_dir_config(apr_pool_t *p, char *d)
+{
+  foc_dir_config_t *dconf = apr_pcalloc(p, sizeof(foc_dir_config_t));
+
+  dconf->check_suexec = DISABLE;
+
+  return dconf;
+}
 
 static int fileownercheck_from_opened_file(request_rec *r, apr_file_t *fd)
 {
   apr_finfo_t finfo;
   struct stat st;
   ap_unix_identity_t *ugid = ap_run_get_suexec_identity(r);
+  foc_dir_config_t *dconf = ap_get_module_config(r->per_dir_config,
+      &fileownercheck_module);
 
   if (lstat(r->filename, &st) == -1) {
     ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, "%s: lstat() failed: %s",
@@ -59,7 +77,8 @@ static int fileownercheck_from_opened_file(request_rec *r, apr_file_t *fd)
     return HTTP_FORBIDDEN;
   }
 
-  if (ugid != NULL && ugid->uid != finfo.user) {
+  if (dconf->check_suexec == ENABLE && ugid != NULL
+      && ugid->uid != finfo.user) {
     ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r,
         "%s: FILEOWNERCHECK faild: opened r->filename=%s uid=%d but "
         "suexec config uid=%d, "
@@ -118,17 +137,35 @@ static void register_hooks(apr_pool_t *p)
       APR_HOOK_LAST);
 }
 
+static const char * set_fileownercheck_suexec(cmd_parms *cmd, void *mconfig,
+    int flag)
+{
+    foc_dir_config_t *dconf = (foc_dir_config_t *)mconfig;
+
+    dconf->check_suexec = flag;
+
+    return NULL;
+}
+
+static const command_rec fileownercheck_cmds[] = {
+  AP_INIT_FLAG("FOCSuexecEnable", set_fileownercheck_suexec, NULL,
+      ACCESS_CONF | RSRC_CONF, "Set Enable Owner Check Using suExecUserGgroup "
+      " On / Off. (default Off)"),
+  {NULL}
+};
+
+
 #if (AP_SERVER_MINORVERSION_NUMBER > 2)
 AP_DECLARE_MODULE(fileownercheck) = {
 #else
 module AP_MODULE_DECLARE_DATA fileownercheck_module = {
 #endif
   STANDARD20_MODULE_STUFF,
-  NULL, /* create per-directory config structure */
+  foc_create_dir_config, /* create per-directory config structure */
   NULL, /* merge per-directory config structures */
   NULL, /* create per-server config structure */
   NULL, /* merge per-server config structures */
-  NULL, /* command apr_table_t */
+  fileownercheck_cmds, /* command apr_table_t */
   register_hooks /* register hooks */
 };
 
