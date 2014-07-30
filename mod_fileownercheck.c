@@ -137,7 +137,7 @@ static void register_hooks(apr_pool_t *p)
       APR_HOOK_LAST);
 }
 
-static const char * set_fileownercheck_suexec(cmd_parms *cmd, void *mconfig,
+static const char *set_fileownercheck_suexec(cmd_parms *cmd, void *mconfig,
     int flag)
 {
     foc_dir_config_t *dconf = (foc_dir_config_t *)mconfig;
