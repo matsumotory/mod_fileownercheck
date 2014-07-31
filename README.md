@@ -4,6 +4,10 @@ mod_fileownercheck checks between owner of opened r->filename and that of curren
 
 ref. [Apache does not honor -FollowSymlinks due to TOCTOU](https://bugs.launchpad.net/ubuntu/+source/apache2/+bug/811428)
 
+- Check whether matches between owner of opened r->filename and that of current r->filename
+- Check whether matches between owner of opened r->filename and that of symlink (r->filename) if r->filename is symlink
+- Check whether matches between owner of opened r->filename and that of r->filename cofigured by ``SuexecUserGroup``
+
 ## How to Use
 ### Quick Install
 ```
